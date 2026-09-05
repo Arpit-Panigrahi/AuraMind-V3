@@ -17,7 +17,9 @@
   * Held-Out Validation Loss: **`3.448`** (Perplexity: **`31.43`**)
   * Held-Out Test Loss: **`3.502`** (Perplexity: **`33.17`**)
   * Final Gradient Norm: `0.55` (exceptionally stable convergence with AdamW decoupled decay)
-* **Response-Only Loss Masking**: Masks user prompts with `PAD_ID` (`ignore_index`), focusing 100% of gradient backpropagation on counselor responses rather than memorizing user inputs.
+* **Emotion-Conditioned Token Prefixing (`<|emotion|>`)**: Prepends ground-truth emotion categories (e.g., `anxious`, `sad`, `lonely`, `proud`) from `EmpatheticDialogues` context and synthetic domain tags. Resolves sentiment inversion ("toxic positivity" where distressed users received cheerful openers) by explicitly conditioning cross-attention.
+* **Min-$p$ Sampling ($p_{\text{min}} = 0.05$)**: Truncates unlikely tail noise tokens whose probability is less than $p_{\text{min}} \times p_{\max}$, preventing hallucinations far better than static top-$p$ on compact models.
+* **Response-Only Loss Masking**: Masks user prompts and emotion prefixes with `PAD_ID` (`ignore_index`), focusing 100% of gradient backpropagation on counselor responses rather than memorizing user inputs.
 * **Repetition Penalty**: Integrated Keskar et al. (2019) multi-token repetition penalty ($\alpha = 1.15$) to prevent repetitive loops in nucleus sampling ($p = 0.90, T = 0.75$).
 * **$O(N)$ KV-Cached Inference**: Step-by-step cached attention across all 6 decoder layers for fast autoregressive token generation.
 * **Curated Hybrid Dataset (24,224 Dialogues)**: 14,224 human dialogues from `EmpatheticDialogues` combined with 10,000 synthetic dialogues validated through a 5-dimension quality judge and strict clinical boundary guardrails.
