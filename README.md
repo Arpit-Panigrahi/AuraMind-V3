@@ -77,16 +77,14 @@ Logits / Cross Entropy Loss
 ## 📁 Repository Structure
 
 ```
-├── AuraMind_V3_Enhanced.ipynb  # End-to-end self-contained Colab notebook (tested & verified)
-├── AuraMind_V3_Executed.ipynb  # Executed run notebook containing all 3,000-step training outputs
-├── AuraMind_V3.ipynb           # Original reference notebook
+├── AuraMind_V3.ipynb           # Complete, self-contained Google Colab notebook (runnable out of the box)
+├── AuraMind_V3_Executed.ipynb  # Executed run notebook containing all 3,000-step training outputs & diagnostics
 ├── run.py                      # Unified CLI runner (info, train, generate, chat)
 ├── requirements.txt            # Python dependencies
 ├── docs/
 │   └── FINDINGS.md             # In-depth research & engineering findings report
 ├── assets/
-│   ├── training_curves.png     # Full 3,000-step training loss & perplexity curves
-│   └── training_curves_3000_steps.png
+│   └── training_curves.png     # Full 3,000-step training loss & perplexity curves
 └── auramind/                   # Modular Python library
     ├── __init__.py
     ├── config.py               # ModelConfig, TrainingConfig, SamplingConfig
@@ -94,7 +92,7 @@ Logits / Cross Entropy Loss
     ├── tokenizer.py            # Byte-Level BPE tokenizer & special token handlers
     ├── synthetic.py            # Scenario bank, safety filter, quality judge, deduplicator
     ├── dataset.py              # EmpatheticDialogues loader & TokenBlockDataset
-    ├── generate.py             # Top-p sampling with repetition penalty & cached inference
+    ├── generate.py             # Top-p sampling with repetition penalty, min-p & cached inference
     └── train.py                # Training loop, cosine scheduler, and diagnostics
 ```
 
@@ -104,8 +102,8 @@ Logits / Cross Entropy Loss
 
 ### 1. Installation
 ```bash
-git clone https://github.com/<your-username>/auramind.git
-cd auramind
+git clone https://github.com/Arpit-Panigrahi/AuraMind-V3.git
+cd AuraMind-V3
 pip install -r requirements.txt
 ```
 
@@ -140,7 +138,7 @@ python run.py chat
 
 To train or reproduce the 3,000-step run on free Google Colab GPUs (Tesla T4):
 1. Open [Google Colab](https://colab.research.google.com).
-2. Upload [AuraMind_V3_Enhanced.ipynb](AuraMind_V3_Enhanced.ipynb).
+2. Upload [AuraMind_V3.ipynb](AuraMind_V3.ipynb).
 3. Select **Runtime > Change runtime type > T4 GPU**.
 4. Click **Runtime > Run all**. All 57 blocks execute sequentially out of the box!
 
