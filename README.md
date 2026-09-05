@@ -4,6 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![Colab GPU](https://img.shields.io/badge/Trained%20on-Tesla%20T4%20GPU-green.svg)](https://colab.research.google.com)
 [![Validation PPL](https://img.shields.io/badge/Validation%20PPL-31.17-brightgreen.svg)](docs/FINDINGS.md)
+[![Website](https://img.shields.io/badge/Website-Live%20Demo-indigo.svg)](https://arpit-panigrahi.github.io/AuraMind-V3/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **AuraMind** is a compact, decoder-only Transformer (~12.2M parameters) trained strictly from scratch for multi-turn empathetic and emotional-support dialogue generation. Built on modern frontier LLM design primitives (LLaMA/Mistral-style), it combines **RMSNorm**, **RoPE (Rotary Position Embeddings)**, **SwiGLU feed-forward networks**, **weight-tied embeddings**, and PyTorch native **SDPA (FlashAttention)**.
@@ -77,6 +78,7 @@ Logits / Cross Entropy Loss
 ## 📁 Repository Structure
 
 ```
+├── index.html                  # Minimalist landing page & interactive empathy simulator (GitHub Pages)
 ├── AuraMind_V3.ipynb           # Complete, self-contained Google Colab notebook (runnable out of the box)
 ├── AuraMind_V3_Executed.ipynb  # Executed run notebook containing all 3,000-step training outputs & diagnostics
 ├── run.py                      # Unified CLI runner (info, train, generate, chat)
