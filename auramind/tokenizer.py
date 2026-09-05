@@ -15,6 +15,7 @@ from .config import (
     EOS_TOKEN,
     USER_TOKEN,
     COUNSELOR_TOKEN,
+    EMOTION_TOKEN,
 )
 
 
@@ -35,10 +36,14 @@ class AuraMindTokenizer:
             ("EOS", EOS_TOKEN),
             ("USER", USER_TOKEN),
             ("COUNSELOR", COUNSELOR_TOKEN),
+            ("EMOTION", EMOTION_TOKEN),
         ]
         for name, token in token_names:
             tok_id = self._tokenizer.token_to_id(token)
             if tok_id is None:
+                # If loading a legacy tokenizer without EMOTION token, fallback gracefully
+                if name == "EMOTION":
+                    continue
                 raise RuntimeError(f"Special token {token} not found in tokenizer vocabulary.")
             self.special_ids[name] = tok_id
 
@@ -67,6 +72,15 @@ class AuraMindTokenizer:
         return self.special_ids["COUNSELOR"]
 
     @property
+    def emotion_id(self) -> Optional[int]:
+        return self.special_ids.get("EMOTION")
+
+    def token_to_id(self, token: str) -> Optional[int]:
+        if self._tokenizer is None:
+            return None
+        return self._tokenizer.token_to_id(token)
+
+    @property
     def vocab_size(self) -> int:
         return self._tokenizer.get_vocab_size()
 
@@ -85,6 +99,7 @@ class AuraMindTokenizer:
             AddedToken(EOS_TOKEN, special=True),
             AddedToken(USER_TOKEN, special=True),
             AddedToken(COUNSELOR_TOKEN, special=True),
+            AddedToken(EMOTION_TOKEN, special=True),
         ]
 
         tok = Tokenizer(BPE(unk_token=UNK_TOKEN))

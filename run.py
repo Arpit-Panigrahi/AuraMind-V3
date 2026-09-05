@@ -182,6 +182,7 @@ def cmd_generate(args):
     sampling_cfg = SamplingConfig(
         temperature=args.temperature,
         top_p=args.top_p,
+        min_p=args.min_p,
         repetition_penalty=args.repetition_penalty,
         max_new_tokens=args.max_tokens,
         use_cache=args.use_cache,
@@ -191,6 +192,7 @@ def cmd_generate(args):
         model=model,
         tokenizer=tokenizer,
         user_text=args.prompt,
+        emotion=args.emotion,
         sampling_config=sampling_cfg,
         device=device,
     )
@@ -219,6 +221,7 @@ def cmd_chat(args):
     sampling_cfg = SamplingConfig(
         temperature=args.temperature,
         top_p=args.top_p,
+        min_p=args.min_p,
         repetition_penalty=args.repetition_penalty,
         use_cache=True,
     )
@@ -269,9 +272,11 @@ def main():
     # Generate
     gen_parser = subparsers.add_parser("generate", help="Generate response for a single prompt")
     gen_parser.add_argument("prompt", type=str, help="User prompt to respond to")
+    gen_parser.add_argument("--emotion", type=str, default=None, help="Explicit emotion conditioning (e.g. anxious, sad, proud)")
     gen_parser.add_argument("--data-dir", default="auramind_data")
     gen_parser.add_argument("--temperature", type=float, default=0.75)
     gen_parser.add_argument("--top-p", type=float, default=0.90)
+    gen_parser.add_argument("--min-p", type=float, default=0.05, help="Min-p dynamic truncation threshold")
     gen_parser.add_argument("--repetition-penalty", type=float, default=1.15)
     gen_parser.add_argument("--max-tokens", type=int, default=80)
     gen_parser.add_argument("--use-cache", action="store_true", default=True)
@@ -282,6 +287,7 @@ def main():
     chat_parser.add_argument("--data-dir", default="auramind_data")
     chat_parser.add_argument("--temperature", type=float, default=0.75)
     chat_parser.add_argument("--top-p", type=float, default=0.90)
+    chat_parser.add_argument("--min-p", type=float, default=0.05, help="Min-p dynamic truncation threshold")
     chat_parser.add_argument("--repetition-penalty", type=float, default=1.15)
     chat_parser.add_argument("--cpu", action="store_true", help="Force CPU mode")
 

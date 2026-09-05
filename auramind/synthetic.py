@@ -315,4 +315,5 @@ def build_synthetic_dialogue(index: int) -> str:
             f"<|counselor|> {closing}",
         ]
 
-    return "\n".join(turns) + " <|eos|>"
+    prefix = f"<|emotion|> {emotion}\n"
+    return prefix + "\n".join(turns) + " <|eos|>"

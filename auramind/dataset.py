@@ -21,6 +21,7 @@ from .config import (
     EOS_TOKEN,
     USER_TOKEN,
     COUNSELOR_TOKEN,
+    EMOTION_TOKEN,
 )
 from .tokenizer import AuraMindTokenizer
 from .synthetic import (
@@ -66,15 +67,20 @@ def download_and_extract_empathetic(raw_dir: Path) -> Path:
 
 
 def load_real_empathetic_records(train_csv_path: Path) -> List[Dict[str, str]]:
-    """Loads and reconstructs multi-turn dialogues from EmpatheticDialogues train.csv."""
+    """Loads and reconstructs multi-turn dialogues from EmpatheticDialogues train.csv with emotion prefix."""
     conversations = defaultdict(list)
+    conv_emotions = {}
     with open(train_csv_path, "r", encoding="utf-8", errors="replace") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
             conv_id = (row.get("conv_id") or "").strip()
             utterance = clean_text(row.get("utterance") or "")
-            if conv_id and utterance:
-                conversations[conv_id].append(utterance)
+            context_emotion = clean_text(row.get("context") or "").lower()
+            if conv_id:
+                if context_emotion and conv_id not in conv_emotions:
+                    conv_emotions[conv_id] = context_emotion
+                if utterance:
+                    conversations[conv_id].append(utterance)
 
     records = []
     seen = set()
@@ -82,6 +88,9 @@ def load_real_empathetic_records(train_csv_path: Path) -> List[Dict[str, str]]:
         if len(turns) < 2:
             continue
         lines = []
+        emotion = conv_emotions.get(conv_id, "").strip()
+        if emotion:
+            lines.append(f"{EMOTION_TOKEN} {emotion}")
         for index, utterance in enumerate(turns):
             role = USER_TOKEN if index % 2 == 0 else COUNSELOR_TOKEN
             lines.append(f"{role} {utterance}")
@@ -95,6 +104,7 @@ def load_real_empathetic_records(train_csv_path: Path) -> List[Dict[str, str]]:
             "doc": doc,
             "hash": digest,
             "source": "real_empathetic",
+            "emotion": emotion,
         })
     return records
 
@@ -125,6 +135,7 @@ class TokenBlockDataset(Dataset):
         user_id = tokenizer.user_id
         counselor_id = tokenizer.counselor_id
         pad_id = tokenizer.pad_id
+        emotion_id = tokenizer.emotion_id
 
         for record in records:
             ids = tokenizer.encode(record["doc"])
@@ -150,8 +161,8 @@ class TokenBlockDataset(Dataset):
                 target_y = list(raw_y)
                 if mask_user_loss:
                     # Determine whether each target belongs to the counselor turn
-                    # In a sequence: <|user|> ... <|counselor|> ...
-                    # Targets predicting the user turn are masked out.
+                    # In a sequence: <|emotion|> ... <|user|> ... <|counselor|> ...
+                    # Targets predicting the prompt/emotion/user turn are masked out.
                     role = "user"
                     for idx, (inp_token, tgt_token) in enumerate(zip(raw_x, raw_y)):
                         if inp_token == pad_id or tgt_token == pad_id:
@@ -162,12 +173,14 @@ class TokenBlockDataset(Dataset):
                             role = "user"
                         elif inp_token == counselor_id:
                             role = "counselor"
+                        elif emotion_id is not None and inp_token == emotion_id:
+                            role = "emotion"
 
                         if tgt_token == counselor_id:
                             # Keep target predicting the role transition to counselor
                             pass
-                        elif role == "user":
-                            # Mask out token predicting user turn content
+                        elif role in ("user", "emotion"):
+                            # Mask out token predicting prompt/user content
                             target_y[idx] = pad_id
 
                 self.input_chunks.append(torch.tensor(raw_x, dtype=torch.long))

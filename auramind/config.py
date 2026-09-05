@@ -11,6 +11,7 @@ BOS_TOKEN = "<|bos|>"
 EOS_TOKEN = "<|eos|>"
 USER_TOKEN = "<|user|>"
 COUNSELOR_TOKEN = "<|counselor|>"
+EMOTION_TOKEN = "<|emotion|>"
 
 DEFAULT_SPECIAL_TOKENS = [
     PAD_TOKEN,
@@ -19,6 +20,7 @@ DEFAULT_SPECIAL_TOKENS = [
     EOS_TOKEN,
     USER_TOKEN,
     COUNSELOR_TOKEN,
+    EMOTION_TOKEN,
 ]
 
 
@@ -80,6 +82,7 @@ class TrainingConfig:
 class SamplingConfig:
     temperature: float = 0.75
     top_p: float = 0.90
+    min_p: float = 0.05
     # Enhancement 2: Repetition penalty (Keskar et al., 2019)
     # Values > 1.0 penalize already generated tokens, preventing repetitive empathetic phrasing loops.
     repetition_penalty: float = 1.15
