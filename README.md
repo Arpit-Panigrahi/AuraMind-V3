@@ -2,31 +2,36 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com)
+[![Colab GPU](https://img.shields.io/badge/Trained%20on-Tesla%20T4%20GPU-green.svg)](https://colab.research.google.com)
+[![Validation PPL](https://img.shields.io/badge/Validation%20PPL-31.43-brightgreen.svg)](docs/FINDINGS.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**AuraMind** is a compact, decoder-only Transformer (~12.2M parameters) designed for multi-turn empathetic and emotional-support dialogue generation. Built on modern frontier LLM design primitives (LLaMA/Mistral-style), it combines **RMSNorm**, **RoPE (Rotary Position Embeddings)**, **SwiGLU feed-forward networks**, **weight-tied embeddings**, and PyTorch native **SDPA (FlashAttention)**.
+**AuraMind** is a compact, decoder-only Transformer (~12.2M parameters) trained strictly from scratch for multi-turn empathetic and emotional-support dialogue generation. Built on modern frontier LLM design primitives (LLaMA/Mistral-style), it combines **RMSNorm**, **RoPE (Rotary Position Embeddings)**, **SwiGLU feed-forward networks**, **weight-tied embeddings**, and PyTorch native **SDPA (FlashAttention)**.
 
 ---
 
-## 🌟 Key Highlights & Findings
+## 🌟 Benchmark Results & Key Highlights
 
-* **Modern LLM Architecture**: Complete from-scratch implementation of RoPE positional encodings, Pre-RMSNorm, and SwiGLU MLP blocks.
-* **Response-Only Loss Masking**: Masks user prompts with `PAD_ID` (`ignore_index`), focusing 100% of gradient updates on counselor responses rather than memorizing user inputs.
-* **Repetition Penalty**: Integrated Keskar et al. (2019) multi-token repetition penalty ($\alpha = 1.15$) to prevent repetitive empathetic loops in small models.
+* **Full 3,000-Step Convergence on Tesla T4 GPU (58m 33s)**:
+  * Initial Batch Loss: `8.536` $\to$ Final Training Loss: **`0.894`** (Step) / **`1.601`** (Train Eval)
+  * Held-Out Validation Loss: **`3.448`** (Perplexity: **`31.43`**)
+  * Held-Out Test Loss: **`3.502`** (Perplexity: **`33.17`**)
+  * Final Gradient Norm: `0.55` (exceptionally stable convergence with AdamW decoupled decay)
+* **Response-Only Loss Masking**: Masks user prompts with `PAD_ID` (`ignore_index`), focusing 100% of gradient backpropagation on counselor responses rather than memorizing user inputs.
+* **Repetition Penalty**: Integrated Keskar et al. (2019) multi-token repetition penalty ($\alpha = 1.15$) to prevent repetitive loops in nucleus sampling ($p = 0.90, T = 0.75$).
 * **$O(N)$ KV-Cached Inference**: Step-by-step cached attention across all 6 decoder layers for fast autoregressive token generation.
-* **Data Curation & Safety Guardrails**: Hybrid dataset combining 17,780 human turns from `EmpatheticDialogues` with synthetic domain scenarios, validated through a 5-dimension quality judge and strict clinical boundary guardrails (preventing unauthorized medical diagnoses).
-* **Zero Data Leakage**: SHA-256 hash assertions enforce $\text{Train} \cap \text{Validation} = \emptyset$ and $\text{Train} \cap \text{Test} = \emptyset$.
+* **Curated Hybrid Dataset (24,224 Dialogues)**: 14,224 human dialogues from `EmpatheticDialogues` combined with 10,000 synthetic dialogues validated through a 5-dimension quality judge and strict clinical boundary guardrails.
+* **Zero Data Leakage**: Enforced through SHA-256 assertions: $\text{Train} \cap \text{Val} = \emptyset$, $\text{Train} \cap \text{Test} = \emptyset$.
 
-Detailed research and architectural analysis are documented in [**docs/FINDINGS.md**](docs/FINDINGS.md).
+Detailed research, convergence dynamics, and behavioral analysis are documented in [**docs/FINDINGS.md**](docs/FINDINGS.md).
 
 ---
 
-## 📊 Training Dynamics
+## 📊 Training Dynamics (3,000 Steps on Tesla T4)
 
-![AuraMind Training Curves](assets/training_curves.png)
+![AuraMind 3000-Step Training Curves](assets/training_curves.png)
 
-The model features stable convergence using **AdamW** with weight decay separation, linear warmup, and cosine decay scheduling.
+The loss curve demonstrates rapid exponential descent during the first 500 steps, transitioning into stable monotonic refinement with zero overfitting divergence between validation and test splits.
 
 ---
 
@@ -63,14 +68,16 @@ Logits / Cross Entropy Loss
 ## 📁 Repository Structure
 
 ```
-├── AuraMind_V3_Enhanced.ipynb  # End-to-end self-contained Colab notebook
+├── AuraMind_V3_Enhanced.ipynb  # End-to-end self-contained Colab notebook (tested & verified)
+├── AuraMind_V3_Executed.ipynb  # Executed run notebook containing all 3,000-step training outputs
 ├── AuraMind_V3.ipynb           # Original reference notebook
 ├── run.py                      # Unified CLI runner (info, train, generate, chat)
 ├── requirements.txt            # Python dependencies
 ├── docs/
-│   └── FINDINGS.md             # Detailed engineering and research report
+│   └── FINDINGS.md             # In-depth research & engineering findings report
 ├── assets/
-│   └── training_curves.png     # Diagnostic loss & perplexity plots
+│   ├── training_curves.png     # Full 3,000-step training loss & perplexity curves
+│   └── training_curves_3000_steps.png
 └── auramind/                   # Modular Python library
     ├── __init__.py
     ├── config.py               # ModelConfig, TrainingConfig, SamplingConfig
@@ -108,7 +115,7 @@ python run.py train --smoke --cpu
 python run.py train --steps 3000 --batch-size 16
 ```
 
-### 5. Generate Responses
+### 5. Generate Responses via CLI
 ```bash
 python run.py generate "I am feeling really anxious about my exam tomorrow."
 ```
@@ -122,10 +129,11 @@ python run.py chat
 
 ## ☁️ Google Colab
 
-To train on free Google Colab GPUs (T4):
-1. Upload [AuraMind_V3_Enhanced.ipynb](AuraMind_V3_Enhanced.ipynb) to Google Colab.
-2. Select **Runtime > Change runtime type > T4 GPU**.
-3. Click **Runtime > Run all**. All blocks run out of the box!
+To train or reproduce the 3,000-step run on free Google Colab GPUs (Tesla T4):
+1. Open [Google Colab](https://colab.research.google.com).
+2. Upload [AuraMind_V3_Enhanced.ipynb](AuraMind_V3_Enhanced.ipynb).
+3. Select **Runtime > Change runtime type > T4 GPU**.
+4. Click **Runtime > Run all**. All 57 blocks execute sequentially out of the box!
 
 ---
 
