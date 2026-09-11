@@ -11,6 +11,12 @@
 
 ---
 
+## 🌐 Live Landing Page
+
+Visit the live project landing page here: **https://arpit-panigrahi.github.io/AuraMind-V3/**
+
+---
+
 ## 🌟 Benchmark Results & Key Highlights
 
 * **Full 3,000-Step Convergence on Tesla T4 GPU (64m 12s)**:
